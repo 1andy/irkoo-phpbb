@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml-stylesheet type="text/xsl" href="modx.prosilver.en.xsl"?>
+<!--NOTICE: Please open this file in your web browser. If presented with a security warning, you may safely tell it to allow the blocked content.-->
+<!--For security purposes, please check: http://www.phpbb.com/mods/ for the latest version of this MOD.\nAlthough MODs are checked before being allowed in the MODs Database there is no guarantee that there are no security problems within the MOD.\nNo support will be given for MODs not found within the MODs Database which can be found at http://www.phpbb.com/mods/-->
+<mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.phpbb.com/mods/xml/modx-1.2.5.xsd">
+    <header>
+        <meta name="generator" content="MODX file generated with PP MODX Creator by tumba25 (online version)"/>
+        <license><![CDATA[http://opensource.org/licenses/gpl-license.php GNU General Public License v2]]></license>
+        <title lang="en"><![CDATA[Irkoo Reputations]]></title>
+        <description lang="en"><![CDATA[This mod adds voting buttons and user reputations to phpBB. 
+It utilizes Irkoo Reputations web service to store and display reputations/voting data.]]></description>
+        <author-group>
+            <author>
+                <username><![CDATA[1Andy]]></username>
+                <homepage><![CDATA[http://irkoo.com]]></homepage>
+                <email><![CDATA[contact@irkoo.com]]></email>
+            </author>
+        </author-group>
+        <mod-version>1.0.4</mod-version>
+        <installation>
+            <level>easy</level>
+            <time>300</time>
+            <target-version>3.0.8</target-version>
+        </installation>
+        <link-group>
+            <link type="language" href="./contrib/de.xml" lang="en">Install German</link>
+            <link type="language" href="./contrib/it.xml" lang="en">Install Italian</link>
+            <link type="language" href="./contrib/pt.xml" lang="en">Install Portuguese</link>
+            <link type="language" href="./contrib/ru.xml" lang="en">Install Russian</link>
+            <link type="language" href="./contrib/bg.xml" lang="en">Install Bulgarian</link>
+        </link-group>
+    </header>
+    <action-group>
+        <copy>
+            <file from="root/adm/style/*.*" to="adm/style/*.*"/>
+            <file from="root/includes/acp/*.*" to="includes/acp/*.*"/>
+            <file from="root/language/en/*.*" to="language/en/*.*"/>
+            <file from="root/umil/*.*" to="umil/*.*"/>
+            <file from="root/install_irkoo_mod.php" to="install_irkoo_mod.php"/>
+        </copy>
+        <open src="includes/functions.php">
+            <edit>
+                <find><![CDATA[function page_footer($run_cron = true)
+{
+    global $db, $config, $template, $user, $auth, $cache, $starttime, $phpbb_root_path, $phpEx;
+]]></find>
+                <action type="after-add"><![CDATA[    if (!empty($config['irkoo_siteid']))
+    {
+        // add language
+        $user->add_lang('mods/irkoo_mod');
+
+        $irk_js_messages = array('MSG_VOTEUP', 'MSG_VOTEDOWN', 'MSG_NOT_AUTHORIZED', 'MSG_MIN_VOTE_UP', 'MSG_MIN_VOTE_DOWN', 'MSG_SELF', 'MSG_NOVOTES', 
+            'AGO_SECONDS', 'AGO_MINUTE', 'AGO_MINUTES', 'AGO_HOUR', 'AGO_HOURS', 'AGO_DAY', 'AGO_DAYS', 'AGO_MONTH', 'AGO_MONTHS', 'AGO_YEAR', 'AGO_YEARS');
+
+        // add Irkoo javascript snippet including __irk_user for enhanced mode
+        $irk_snippet = "<script type='text/javascript'>\n";
+
+        // add Irkoo localizable messages
+        foreach($irk_js_messages as $irk_key) 
+        {
+            $irk_msg = $user->lang['IRKOO_'.$irk_key];
+            if ($irk_msg != null) 
+            {
+                $irk_msg = str_replace("\\", "\\\\", $irk_msg);
+                $irk_msg = str_replace("'","\\'", $irk_msg);
+                $irk_msg = str_replace("<","\\<", $irk_msg);
+                $irk_msg = str_replace(">","\\>", $irk_msg);
+
+                $irk_js_key = "__irk_".strtolower($irk_key);
+
+                $irk_snippet .= "\tvar {$irk_js_key} = '{$irk_msg}';\n";
+            }
+        }
+
+        // add Irkoo site ID
+        $irk_snippet .= "\tvar __irk_site = '{$config['irkoo_siteid']}';\n";
+
+        if ($user->data['user_id'] != ANONYMOUS)
+        {
+            $irk_id = $user->data['user_id'];
+            $irk_name = $user->data['username'];
+            $irk_hash = md5($config['irkoo_secret'].md5($irk_id).md5($irk_name));
+
+            # escape certain special characters
+            $irk_name = str_replace("\\", "\\\\", $irk_name);
+            $irk_name = str_replace("'","\\'", $irk_name);
+            $irk_name = str_replace("<","\\<", $irk_name);
+            $irk_name = str_replace(">","\\>", $irk_name);
+
+            $irk_snippet .= "\tvar __irk_user = {id:'{$irk_id}', name:'{$irk_name}', hash:'{$irk_hash}'};\n";
+        }
+
+        $irk_snippet .= "\t(function() { var irk = document.createElement('script'); irk.type = 'text/javascript';\n";
+        $irk_snippet .= "\tirk.async = true; irk.src = document.location.protocol + '//z.irkoo.com/irk.js';\n";
+        $irk_snippet .= "\tvar s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(irk, s);})();\n";
+        $irk_snippet .= "</script>";
+
+        $template->assign_var('IRKOO_SNIPPET', $irk_snippet);
+        $template->assign_var('U_IRKOO_STATS', "http://z.irkoo.com/stat/".strtolower($config['irkoo_siteid']).".html");
+    }
+]]></action>
+            </edit>
+        </open>
+        <open src="styles/prosilver/template/overall_header.html">
+            <edit>
+                <find><![CDATA[            <ul class="linklist rightside">]]></find>
+                <action type="after-add"><![CDATA[                <!-- IF U_IRKOO_STATS --><li class="icon-ucp"><a href="{U_IRKOO_STATS}" class="irk-stats">{L_IRKOO_REPUTATIONS_LIST}</a></li><!-- ENDIF -->]]></action>
+            </edit>
+        </open>
+        <open src="styles/prosilver/template/overall_footer.html">
+            <edit>
+                <find><![CDATA[</body>
+</html>]]></find>
+                <action type="before-add"><![CDATA[{IRKOO_SNIPPET}]]></action>
+            </edit>
+        </open>
+        <open src="styles/prosilver/template/viewtopic_body.html">
+            <edit>
+                <find><![CDATA[            <p class="author"><!-- IF S_IS_BOT -->{postrow.MINI_POST_IMG}<!-- ELSE --><a href="{postrow.U_MINI_POST}">{postrow.MINI_POST_IMG}</a><!-- ENDIF -->{L_POST_BY_AUTHOR} <strong>{postrow.POST_AUTHOR_FULL}</strong> &raquo; {postrow.POST_DATE} </p>]]></find>
+                <action type="before-add"><![CDATA[            <div class="irk-vote" id="irk_vote_{postrow.POST_ID}<!-- IF postrow.POSTER_ID != 1 -->_{postrow.POSTER_ID}<!-- ENDIF -->"></div>]]></action>
+            </edit>
+            <edit>
+                <find><![CDATA[        <!-- IF postrow.POSTER_POSTS != '' --><dd><strong>{L_POSTS}:</strong> {postrow.POSTER_POSTS}</dd><!-- ENDIF -->]]></find>
+                <action type="after-add"><![CDATA[        <!-- IF postrow.POSTER_ID != 1 and IRKOO_SNIPPET --><dd><strong>{L_IRKOO_REPUTATION}:</strong> <div class="irk-rating" id="irk_rating_{postrow.POSTER_ID}"></div></dd><!-- ENDIF -->]]></action>
+            </edit>
+        </open>
+        <open src="styles/prosilver/theme/colours.css">
+            <edit>
+                <find><![CDATA[input.disabled {
+    color: #666666;
+}
+]]></find>
+                <action type="after-add"><![CDATA[/* Irkoo styles
+---------------------------------------- */
+.irk-popup-text {
+    font-family: "Lucida Grande","Trebuchet MS",Verdana,Helvetica,Arial,sans-serif;
+    font-size: 13px;
+}
+.irk-popup-header {
+    background-color: #e7eef3;
+    border-color: #dde7ee;
+}
+.irk-vote {
+    float:right;
+}
+.irk-rating {
+    font-family: Verdana,Helvetica,Arial,sans-serif;
+    display: inline;
+}
+.irk-negative a {
+    color: #ca462c !important;
+}
+]]></action>
+            </edit>
+        </open>
+        <php-installer><![CDATA[install_irkoo_mod.php]]></php-installer>
+        <diy-instructions lang="en"><![CDATA[After installation a new section appears in the Admin -> .MODS menu.
+
+To setup additional languages, see instructions in the contrib directory.
+
+Proceed to Admin -> .MODS -> Irkoo Settings and enter settings required to enable Irkoo.
+Dont' forget to delete the install_irkoo_mod.php from the root directory of your phpBB installation.
+
+And use CTRL+F5 in your browser for new board styles to be reloaded.]]></diy-instructions>
+    </action-group>
+</mod>

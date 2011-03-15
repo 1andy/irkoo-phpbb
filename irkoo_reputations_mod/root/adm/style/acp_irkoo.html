@@ -1,0 +1,45 @@
+<!-- INCLUDE overall_header.html -->
+ 
+<a name="maincontent"></a>
+
+<h1>{L_ACP_IRKOO_SETTINGS}</h1>
+
+<p>
+    {L_IRKOO_REGISTER}
+</p>
+<ol>
+    <li>{L_IRKOO_STEP1}</li>
+    <li>{L_IRKOO_STEP2}</li>
+</ol>
+
+<form id="acp_irkoo" method="post" action="{U_ACTION}">
+
+<fieldset>
+    <legend>{L_GENERAL_OPTIONS}</legend>
+    <dl>
+        <dt><label for="irkoo_siteid">{L_IRKOO_SITEID}:</label></dt>
+        <dd><input type="text" id="irkoo_siteid" name="irkoo_siteid" value="{IRKOO_SITEID}"/></dd>
+    </dl>
+    <dl>
+        <dt><label for="irkoo_secret">{L_IRKOO_SECRET}:</label></dt>
+        <dd><input type="text" id="irkoo_secret" name="irkoo_secret" value="{IRKOO_SECRET}"/></dd>
+    </dl>
+</fieldset>
+<fieldset class="submit-buttons">
+    <legend>{L_SUBMIT}</legend>
+    <input type="hidden" name="action" value="save" />
+
+    <input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+    <input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+    {S_FORM_TOKEN}
+</fieldset>
+</form>
+<script type="text/javascript">
+// <![CDATA[
+    var irkoo_siteid = document.getElementById('irkoo_siteid');
+    // for those who understand
+    if (irkoo_siteid) irkoo_siteid.placeholder = 'e.g. IK-12345';
+// ]]>
+</script>
+ 
+<!-- INCLUDE overall_footer.html -->
